@@ -767,7 +767,9 @@ def main():
     export_top_stocks(conn)
     export_momentum_stocks(conn)
     export_screener_data(conn)
-    export_notes(conn)
+    # Notes are now managed exclusively via the web (GitHub Contents API).
+    # Skipping export to avoid overwriting web-edited notes.
+    # export_notes(conn)
 
     conn.close()
     print()

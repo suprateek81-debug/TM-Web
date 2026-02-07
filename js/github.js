@@ -215,8 +215,7 @@ const GitHubAPI = {
             </div>
             <div class="settings-status" id="settings-status"></div>
             <div class="settings-help">
-                Requires a GitHub PAT with <em>repo</em> scope.<br>
-                Web notes are overwritten when desktop pushes updates.
+                Requires a GitHub PAT with <em>repo</em> scope.
             </div>
         `;
 
