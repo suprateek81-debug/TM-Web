@@ -436,9 +436,9 @@ body {
     background: var(--bg-primary);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    width: 600px;
-    max-width: 90vw;
-    max-height: 80vh;
+    width: 1200px;
+    max-width: 95vw;
+    max-height: 95vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -523,8 +523,8 @@ body {
 /* ── Notes Textarea & Edit Controls ── */
 .notes-textarea {
     width: 100%;
-    min-height: 200px;
-    max-height: 50vh;
+    min-height: 700px;
+    max-height: 80vh;
     resize: vertical;
     border: 1px solid var(--border);
     border-radius: 8px;
