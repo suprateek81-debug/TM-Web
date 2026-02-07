@@ -256,17 +256,6 @@ const Dashboard = {
                         order: 2
                     },
                     {
-                        label: 'RSI (7)',
-                        data: sd.rsi,
-                        borderColor: 'transparent',
-                        borderWidth: 0,
-                        fill: false,
-                        pointRadius: 0,
-                        pointHoverRadius: 0,
-                        showLine: false,
-                        order: 3
-                    },
-                    {
                         data: bullData,
                         borderColor: 'transparent',
                         backgroundColor: '#1e8e3e',
@@ -299,6 +288,22 @@ const Dashboard = {
                 scales: this.commonScales(labels),
                 plugins: {
                     ...this.commonPlugins(),
+                    tooltip: {
+                        ...this.commonPlugins().tooltip,
+                        callbacks: {
+                            ...this.commonPlugins().tooltip.callbacks,
+                            afterBody(tooltipItems) {
+                                if (tooltipItems.length > 0) {
+                                    const idx = tooltipItems[0].dataIndex;
+                                    const rsiVal = sd.rsi[idx];
+                                    if (rsiVal != null) {
+                                        return 'RSI (7): ' + rsiVal;
+                                    }
+                                }
+                                return '';
+                            }
+                        }
+                    },
                     annotation: {
                         annotations: bullishAnnotations
                     }
