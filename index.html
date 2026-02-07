@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingMarket - Stock Analysis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <h1 class="app-title">TradingMarket</h1>
+            <span class="app-subtitle">Stock Analysis</span>
+        </div>
+        <div class="header-right">
+            <span id="total-stocks" class="header-stat">Stocks: --</span>
+            <span id="last-refresh" class="header-stat">Last Refresh: --</span>
+            <span id="data-as-of" class="header-stat accent">Data as of: --</span>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-bar">
+        <button class="tab-btn active" data-tab="dashboard">India Market Dashboard</button>
+        <button class="tab-btn" data-tab="industries">Leading Industries</button>
+        <button class="tab-btn" data-tab="stocks">Leading Stocks</button>
+        <button class="tab-btn" data-tab="screener">Screener</button>
+        <div class="tab-indicator"></div>
+    </nav>
+
+    <!-- Tab Content -->
+    <main class="tab-content">
+        <!-- Tab 1: Market Dashboard -->
+        <section id="tab-dashboard" class="tab-panel active">
+            <div class="dashboard-header">
+                <div class="days-selector">
+                    <span>Show:</span>
+                    <button class="days-btn" data-days="100">100 days</button>
+                    <button class="days-btn active" data-days="250">250 days</button>
+                    <button class="days-btn" data-days="0">All</button>
+                </div>
+            </div>
+            <div class="chart-grid">
+                <div class="chart-cell">
+                    <div class="chart-title" id="chart-title-tb">Trend Breath</div>
+                    <canvas id="chart-trend-breath"></canvas>
+                </div>
+                <div class="chart-cell">
+                    <div class="chart-title" id="chart-title-ms5">Market Strength (5 SMA)</div>
+                    <canvas id="chart-ms-sma5"></canvas>
+                </div>
+                <div class="chart-cell">
+                    <div class="chart-title" id="chart-title-nnhl">NNHL</div>
+                    <canvas id="chart-nnhl"></canvas>
+                </div>
+                <div class="chart-cell">
+                    <div class="chart-title" id="chart-title-ms20">Market Strength (20 SMA)</div>
+                    <canvas id="chart-ms-sma20"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Leading Industries -->
+        <section id="tab-industries" class="tab-panel">
+            <div class="controls-row">
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="leading">Leading Industries</button>
+                    <button class="view-btn" data-view="momentum">Leading Momentum</button>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="industry-search" placeholder="Search industry...">
+                    <span id="industry-search-result" class="search-result"></span>
+                </div>
+            </div>
+            <div id="industries-grid" class="card-grid cols-4"></div>
+            <div id="industries-summary" class="summary-bar"></div>
+        </section>
+
+        <!-- Tab 3: Leading Stocks -->
+        <section id="tab-stocks" class="tab-panel">
+            <div class="controls-row">
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="top100">Top 100 Stocks</button>
+                    <button class="view-btn" data-view="momentum">Top 25 Momentum</button>
+                </div>
+            </div>
+            <div id="stocks-summary" class="summary-bar"></div>
+            <div id="stocks-grid" class="card-grid cols-5"></div>
+        </section>
+
+        <!-- Tab 4: Screener -->
+        <section id="tab-screener" class="tab-panel">
+            <div class="screener-header">
+                <div class="screener-controls">
+                    <label class="screener-label">Ticker:</label>
+                    <input type="text" id="screener-search" placeholder="e.g. RELIANCE">
+                    <button id="screener-go" class="btn-primary">Show Industry</button>
+                    <span id="screener-status" class="screener-status"></span>
+                </div>
+            </div>
+            <div id="screener-industry-label" class="industry-label"></div>
+            <div id="screener-table-container" class="table-container"></div>
+        </section>
+    </main>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip hidden"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/industries.js"></script>
+    <script src="js/stocks.js"></script>
+    <script src="js/screener.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
