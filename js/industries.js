@@ -73,11 +73,18 @@ const Industries = {
             const momentum = getMomentumIndicator(ind.momentum_change);
             const selected = this.selectedIndustries.has(ind.name) ? ' selected' : '';
             const escapedName = escapeHtml(ind.name);
+            const scoreDisplay = ind.score != null ? ind.score.toFixed(2) : '-';
 
-            return `<div class="card${selected}" data-industry="${escapedName}">` +
-                `<span class="card-rank">${ind.rank}</span>` +
-                `<span class="card-name">${escapedName}</span>` +
-                `<span class="card-momentum ${momentum.color}">${momentum.symbol} (${ind.momentum_change != null ? ind.momentum_change : '-'})</span>` +
+            return `<div class="card industry-card${selected}" data-industry="${escapedName}">` +
+                `<div class="card-top">` +
+                    `<span class="card-rank">${ind.rank}</span>` +
+                    `<span class="card-name">${escapedName}</span>` +
+                `</div>` +
+                `<div class="card-bottom">` +
+                    `<span class="card-stock-count">${ind.stock_count} stocks</span>` +
+                    `<span class="card-score">Score: ${scoreDisplay}</span>` +
+                    `<span class="card-momentum ${momentum.color}">${momentum.symbol} (${ind.momentum_change != null ? ind.momentum_change : '-'})</span>` +
+                `</div>` +
                 `</div>`;
         }).join('');
 
