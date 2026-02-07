@@ -134,18 +134,38 @@ const Dashboard = {
     },
 
     updateTitle(sd) {
-        const titleEl = document.getElementById('chart-title-tb');
-        if (!titleEl) return;
-
         const cv = this.data.current_values;
-        const tb = cv.trend_breath;
-        let subtitle = '';
-        if (cv.is_bullish) {
-            subtitle = '(RSI: ' + cv.rsi + ')';
-        } else {
-            subtitle = '(Bull Flip > ' + cv.bull_flip_value + ')';
+
+        // Trend Breath title
+        const titleTB = document.getElementById('chart-title-tb');
+        if (titleTB) {
+            const tb = cv.trend_breath;
+            let subtitle = '';
+            if (cv.is_bullish) {
+                subtitle = '(RSI: ' + cv.rsi + ')';
+            } else {
+                subtitle = '(Bull Flip > ' + cv.bull_flip_value + ')';
+            }
+            titleTB.textContent = 'Trend Breath: ' + tb + ' ' + subtitle;
         }
-        titleEl.textContent = 'Trend Breath: ' + tb + ' ' + subtitle;
+
+        // Market Strength (5 SMA) title
+        const titleMS5 = document.getElementById('chart-title-ms5');
+        if (titleMS5) {
+            titleMS5.textContent = 'Market Strength (5 SMA): ' + cv.ms_sma5;
+        }
+
+        // NNHL title
+        const titleNNHL = document.getElementById('chart-title-nnhl');
+        if (titleNNHL) {
+            titleNNHL.textContent = 'NNHL: ' + cv.nnhl;
+        }
+
+        // Market Strength (20 SMA) title
+        const titleMS20 = document.getElementById('chart-title-ms20');
+        if (titleMS20) {
+            titleMS20.textContent = 'Market Strength (20 SMA): ' + cv.ms_sma20;
+        }
     },
 
     buildBullishAnnotations(sd) {
@@ -178,13 +198,14 @@ const Dashboard = {
         const ctx = document.getElementById('chart-trend-breath');
         if (!ctx) return null;
 
-        // Build scatter data for bull and bear flips
+        // Build scatter data for bull and bear flips using numeric indices
+        // (using label strings would clump points at first occurrence of that month)
         const bullScatter = sd.bull_flips.map(i => ({
-            x: labels[i],
+            x: i,
             y: sd.trend_breath[i]
         }));
         const bearScatter = sd.bear_flips.map(i => ({
-            x: labels[i],
+            x: i,
             y: sd.trend_breath[i]
         }));
 
