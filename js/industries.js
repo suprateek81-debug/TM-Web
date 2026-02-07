@@ -9,13 +9,7 @@ const Industries = {
         this.data = await fetchJSON('data/industries.json');
         if (!this.data) return;
 
-        this.selectedIndustries = new Set(
-            this.data.industries
-                .filter(ind => ind.name !== 'Other Industries')
-                .sort((a, b) => a.rank - b.rank)
-                .slice(0, 25)
-                .map(ind => ind.name)
-        );
+        this.selectedIndustries = new Set();
 
         this.renderSummary();
         this.renderGrid();
