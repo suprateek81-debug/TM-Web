@@ -25,6 +25,17 @@ const GitHubAPI = {
         return !!this.getToken();
     },
 
+    // Prompt user for token if not set. Returns true if token is available.
+    ensureToken() {
+        if (this.hasToken()) return true;
+        const token = prompt('Enter your GitHub Personal Access Token to enable note editing:');
+        if (token && token.trim()) {
+            this.setToken(token.trim());
+            return true;
+        }
+        return false;
+    },
+
     // ── UTF-8 Safe Base64 ──
 
     utf8ToBase64(str) {
@@ -97,6 +108,10 @@ const GitHubAPI = {
         // 1. Fetch latest for fresh SHA + merge
         const latest = await this.fetchLatestNotes();
         if (latest.error) {
+            // If auth error, clear bad token so user can re-enter
+            if (latest.error === 'auth') {
+                this.clearToken();
+            }
             return { success: false, error: latest.error };
         }
 
@@ -141,6 +156,7 @@ const GitHubAPI = {
             }
 
             if (resp.status === 401 || resp.status === 403) {
+                this.clearToken();
                 return { success: false, error: 'auth' };
             }
 
@@ -155,122 +171,5 @@ const GitHubAPI = {
             console.error('saveNote network error:', e);
             return { success: false, error: 'network' };
         }
-    },
-
-    // ── Token Validation ──
-
-    async validateToken(token) {
-        try {
-            const resp = await fetch('https://api.github.com/user', {
-                headers: {
-                    'Authorization': 'token ' + token,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            return resp.ok;
-        } catch (e) {
-            return false;
-        }
-    },
-
-    // ── Settings UI ──
-
-    initSettings() {
-        const btn = document.getElementById('settings-btn');
-        if (!btn) return;
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.toggleSettings();
-        });
-        // Close dropdown on outside click
-        document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('settings-dropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
-                dropdown.remove();
-            }
-        });
-    },
-
-    toggleSettings() {
-        let dropdown = document.getElementById('settings-dropdown');
-        if (dropdown) { dropdown.remove(); return; }
-
-        const hasToken = this.hasToken();
-
-        dropdown = document.createElement('div');
-        dropdown.id = 'settings-dropdown';
-        dropdown.className = 'settings-dropdown';
-        dropdown.addEventListener('click', e => e.stopPropagation());
-
-        dropdown.innerHTML = `
-            <div class="settings-title">
-                <span class="token-indicator ${hasToken ? 'active' : 'inactive'}"></span>
-                <strong>GitHub Token</strong>
-            </div>
-            <input type="password" class="settings-input" id="settings-token-input"
-                placeholder="${hasToken ? 'Token configured (enter new to replace)' : 'Paste GitHub PAT here'}">
-            <div class="settings-actions">
-                <button class="btn-primary settings-save-token" id="settings-save-token">Save Token</button>
-                <button class="settings-clear-btn" id="settings-clear-token" ${!hasToken ? 'disabled' : ''}>Clear</button>
-            </div>
-            <div class="settings-status" id="settings-status"></div>
-            <div class="settings-help">
-                Requires a GitHub PAT with <em>repo</em> scope.
-            </div>
-        `;
-
-        const btn = document.getElementById('settings-btn');
-        btn.parentElement.style.position = 'relative';
-        btn.parentElement.appendChild(dropdown);
-
-        // Save token handler
-        dropdown.querySelector('#settings-save-token').addEventListener('click', async () => {
-            const input = dropdown.querySelector('#settings-token-input');
-            const status = dropdown.querySelector('#settings-status');
-            const token = input.value.trim();
-
-            if (!token) {
-                status.textContent = 'Please enter a token.';
-                status.className = 'settings-status error';
-                return;
-            }
-
-            status.textContent = 'Validating...';
-            status.className = 'settings-status';
-
-            const valid = await this.validateToken(token);
-            if (valid) {
-                this.setToken(token);
-                status.textContent = 'Token saved successfully.';
-                status.className = 'settings-status success';
-                // Update indicator
-                const indicator = dropdown.querySelector('.token-indicator');
-                if (indicator) {
-                    indicator.className = 'token-indicator active';
-                }
-                input.value = '';
-                input.placeholder = 'Token configured (enter new to replace)';
-                dropdown.querySelector('#settings-clear-token').disabled = false;
-            } else {
-                status.textContent = 'Invalid token. Check and try again.';
-                status.className = 'settings-status error';
-            }
-        });
-
-        // Clear token handler
-        dropdown.querySelector('#settings-clear-token').addEventListener('click', () => {
-            this.clearToken();
-            const indicator = dropdown.querySelector('.token-indicator');
-            if (indicator) {
-                indicator.className = 'token-indicator inactive';
-            }
-            const input = dropdown.querySelector('#settings-token-input');
-            input.value = '';
-            input.placeholder = 'Paste GitHub PAT here';
-            dropdown.querySelector('#settings-clear-token').disabled = true;
-            const status = dropdown.querySelector('#settings-status');
-            status.textContent = 'Token cleared.';
-            status.className = 'settings-status';
-        });
     }
 };

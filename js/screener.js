@@ -348,7 +348,6 @@ const Screener = {
 
         const noteInfo = this.notesData ? this.notesData[ticker] : null;
         let originalText = (noteInfo && noteInfo.notes) ? noteInfo.notes : '';
-        const hasToken = GitHubAPI.hasToken();
 
         // ── Overlay ──
         const overlay = document.createElement('div');
@@ -372,14 +371,11 @@ const Screener = {
         const body = document.createElement('div');
         body.className = 'notes-modal-body';
 
-        // Textarea (editable if token, readonly otherwise)
+        // Textarea — always editable
         const textarea = document.createElement('textarea');
         textarea.className = 'notes-textarea';
         textarea.value = originalText;
-        textarea.readOnly = !hasToken;
-        textarea.placeholder = hasToken
-            ? 'Add notes for this stock...'
-            : 'No notes for this stock.';
+        textarea.placeholder = 'Add notes for this stock...';
 
         body.appendChild(textarea);
 
@@ -399,63 +395,60 @@ const Screener = {
         const actions = document.createElement('div');
         actions.className = 'notes-actions';
 
-        if (hasToken) {
-            const status = document.createElement('span');
-            status.className = 'notes-status';
+        const status = document.createElement('span');
+        status.className = 'notes-status';
 
-            const saveBtn = document.createElement('button');
-            saveBtn.className = 'notes-save-btn';
-            saveBtn.textContent = 'Save';
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'notes-save-btn';
+        saveBtn.textContent = 'Save';
 
-            saveBtn.addEventListener('click', async () => {
-                saveBtn.disabled = true;
-                saveBtn.textContent = 'Saving...';
-                status.textContent = '';
-                status.className = 'notes-status saving';
+        saveBtn.addEventListener('click', async () => {
+            // Prompt for token on first save if not configured
+            if (!GitHubAPI.ensureToken()) {
+                status.textContent = 'Token required to save.';
+                status.className = 'notes-status error';
+                return;
+            }
 
-                const result = await GitHubAPI.saveNote(ticker, textarea.value.trim());
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            status.textContent = '';
+            status.className = 'notes-status saving';
 
-                if (result.success) {
-                    const now = GitHubAPI.formatTimestamp();
-                    const trimmed = textarea.value.trim();
-                    if (trimmed) {
-                        if (!this.notesData) this.notesData = {};
-                        this.notesData[ticker] = { notes: trimmed, last_updated: now };
-                    } else if (this.notesData && this.notesData[ticker]) {
-                        delete this.notesData[ticker];
-                    }
-                    meta.textContent = 'Last updated: ' + now;
-                    originalText = trimmed;
-                    status.textContent = 'Saved \u2713';
-                    status.className = 'notes-status success';
-                    setTimeout(() => { status.textContent = ''; }, 2000);
-                } else {
-                    if (result.error === 'auth') {
-                        status.textContent = 'Auth failed. Check token in Settings.';
-                    } else if (result.error === 'conflict') {
-                        status.textContent = 'Conflict. Please try again.';
-                    } else if (result.error === 'network') {
-                        status.textContent = 'Network error. Check connection.';
-                    } else {
-                        status.textContent = 'Save failed. Try again.';
-                    }
-                    status.className = 'notes-status error';
+            const result = await GitHubAPI.saveNote(ticker, textarea.value.trim());
+
+            if (result.success) {
+                const now = GitHubAPI.formatTimestamp();
+                const trimmed = textarea.value.trim();
+                if (trimmed) {
+                    if (!this.notesData) this.notesData = {};
+                    this.notesData[ticker] = { notes: trimmed, last_updated: now };
+                } else if (this.notesData && this.notesData[ticker]) {
+                    delete this.notesData[ticker];
                 }
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Save';
-            });
+                meta.textContent = 'Last updated: ' + now;
+                originalText = trimmed;
+                status.textContent = 'Saved \u2713';
+                status.className = 'notes-status success';
+                setTimeout(() => { status.textContent = ''; }, 2000);
+            } else {
+                if (result.error === 'auth') {
+                    status.textContent = 'Auth failed. Try saving again to re-enter token.';
+                } else if (result.error === 'conflict') {
+                    status.textContent = 'Conflict. Please try again.';
+                } else if (result.error === 'network') {
+                    status.textContent = 'Network error. Check connection.';
+                } else {
+                    status.textContent = 'Save failed. Try again.';
+                }
+                status.className = 'notes-status error';
+            }
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        });
 
-            actions.appendChild(status);
-            actions.appendChild(saveBtn);
-        } else {
-            const link = document.createElement('span');
-            link.className = 'notes-configure-link';
-            link.textContent = 'Configure GitHub token to edit';
-            link.addEventListener('click', () => {
-                GitHubAPI.toggleSettings();
-            });
-            actions.appendChild(link);
-        }
+        actions.appendChild(status);
+        actions.appendChild(saveBtn);
 
         footer.appendChild(actions);
         body.appendChild(footer);
@@ -482,9 +475,7 @@ const Screener = {
         };
         document.addEventListener('keydown', escHandler);
 
-        // Focus textarea if editable
-        if (hasToken) {
-            setTimeout(() => textarea.focus(), 50);
-        }
+        // Focus textarea
+        setTimeout(() => textarea.focus(), 50);
     }
 };
