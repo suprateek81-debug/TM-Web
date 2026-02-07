@@ -53,19 +53,24 @@ function debounce(fn, delay = 300) {
 
 function isFundamentallyStrong(stock) {
     const { pat_gr_q1, pat_gr_q2, sales_gr_q1, sales_gr_q2 } = stock;
-    if (pat_gr_q1 == null || sales_gr_q1 == null) return null;
 
-    if (sales_gr_q1 > 35) return true;
-    if (pat_gr_q1 > 70) return true;
-    if (sales_gr_q1 > 20 && pat_gr_q1 > 40) return true;
+    // Need at least some Q1 or Q2 data
+    if (pat_gr_q1 == null && sales_gr_q1 == null && pat_gr_q2 == null && sales_gr_q2 == null) return null;
 
-    if (pat_gr_q2 != null && sales_gr_q2 != null) {
-        if (sales_gr_q2 > 35) return true;
-        if (pat_gr_q2 > 70) return true;
-        if (sales_gr_q2 > 20 && pat_gr_q2 > 40) return true;
-        if (sales_gr_q1 > 20 && sales_gr_q2 > 20) return true;
-        if (pat_gr_q1 > 40 && pat_gr_q2 > 40) return true;
-    }
+    // Q1 checks (each field checked independently if available)
+    if (sales_gr_q1 != null && sales_gr_q1 > 35) return true;
+    if (pat_gr_q1 != null && pat_gr_q1 > 70) return true;
+    if (sales_gr_q1 != null && pat_gr_q1 != null && sales_gr_q1 > 20 && pat_gr_q1 > 40) return true;
+
+    // Q2 checks
+    if (sales_gr_q2 != null && sales_gr_q2 > 35) return true;
+    if (pat_gr_q2 != null && pat_gr_q2 > 70) return true;
+    if (sales_gr_q2 != null && pat_gr_q2 != null && sales_gr_q2 > 20 && pat_gr_q2 > 40) return true;
+
+    // Cross-quarter checks
+    if (sales_gr_q1 != null && sales_gr_q2 != null && sales_gr_q1 > 20 && sales_gr_q2 > 20) return true;
+    if (pat_gr_q1 != null && pat_gr_q2 != null && pat_gr_q1 > 40 && pat_gr_q2 > 40) return true;
+
     return false;
 }
 

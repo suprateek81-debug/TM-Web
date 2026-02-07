@@ -446,29 +446,31 @@ def is_fundamentally_strong(row):
     sales_q1 = row.get('sales_gr_q1')
     sales_q2 = row.get('sales_gr_q2')
 
-    if pat_q1 is None or sales_q1 is None:
+    # Need at least some Q1 or Q2 data
+    if pat_q1 is None and sales_q1 is None and pat_q2 is None and sales_q2 is None:
         return None  # Insufficient data
 
-    # Q1 alone
-    if sales_q1 > 35:
+    # Q1 checks (each field checked independently if available)
+    if sales_q1 is not None and sales_q1 > 35:
         return True
-    if pat_q1 > 70:
+    if pat_q1 is not None and pat_q1 > 70:
         return True
-    if sales_q1 > 20 and pat_q1 > 40:
+    if sales_q1 is not None and pat_q1 is not None and sales_q1 > 20 and pat_q1 > 40:
         return True
 
-    # Q1 + Q2 combined
-    if pat_q2 is not None and sales_q2 is not None:
-        if sales_q2 > 35:
-            return True
-        if pat_q2 > 70:
-            return True
-        if sales_q2 > 20 and pat_q2 > 40:
-            return True
-        if sales_q1 > 20 and sales_q2 > 20:
-            return True
-        if pat_q1 > 40 and pat_q2 > 40:
-            return True
+    # Q2 checks
+    if sales_q2 is not None and sales_q2 > 35:
+        return True
+    if pat_q2 is not None and pat_q2 > 70:
+        return True
+    if sales_q2 is not None and pat_q2 is not None and sales_q2 > 20 and pat_q2 > 40:
+        return True
+
+    # Cross-quarter checks
+    if sales_q1 is not None and sales_q2 is not None and sales_q1 > 20 and sales_q2 > 20:
+        return True
+    if pat_q1 is not None and pat_q2 is not None and pat_q1 > 40 and pat_q2 > 40:
+        return True
 
     return False
 
