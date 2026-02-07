@@ -1,7 +1,10 @@
 /* Shared utilities for TradingMarket Web */
 
 async function fetchJSON(url) {
-    const resp = await fetch(url);
+    // Add cache-busting timestamp to bypass browser/CDN caching of data files
+    const separator = url.includes('?') ? '&' : '?';
+    const bustUrl = url + separator + '_t=' + Date.now();
+    const resp = await fetch(bustUrl);
     if (!resp.ok) throw new Error(`Failed to fetch ${url}: ${resp.status}`);
     return resp.json();
 }
