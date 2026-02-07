@@ -114,6 +114,10 @@ const Dashboard = {
                 enabled: true,
                 mode: 'index',
                 intersect: false,
+                filter(tooltipItem) {
+                    // Hide tooltip entries for marker-only datasets (triangles)
+                    return !tooltipItem.dataset._hideFromTooltip;
+                },
                 callbacks: {
                     title(tooltipItems) {
                         if (tooltipItems.length > 0 && self._rawDates) {
@@ -241,6 +245,7 @@ const Dashboard = {
                 labels: labels,
                 datasets: [
                     {
+                        label: 'Trend Breath',
                         data: sd.trend_breath,
                         borderColor: '#1a73e8',
                         borderWidth: 2,
@@ -251,6 +256,17 @@ const Dashboard = {
                         order: 2
                     },
                     {
+                        label: 'RSI (7)',
+                        data: sd.rsi,
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        fill: false,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        showLine: false,
+                        order: 3
+                    },
+                    {
                         data: bullData,
                         borderColor: 'transparent',
                         backgroundColor: '#1e8e3e',
@@ -259,7 +275,8 @@ const Dashboard = {
                         pointHoverRadius: 10,
                         showLine: false,
                         spanGaps: false,
-                        order: 1
+                        order: 1,
+                        _hideFromTooltip: true
                     },
                     {
                         data: bearData,
@@ -271,7 +288,8 @@ const Dashboard = {
                         pointRotation: 180,
                         showLine: false,
                         spanGaps: false,
-                        order: 1
+                        order: 1,
+                        _hideFromTooltip: true
                     }
                 ]
             },

@@ -91,19 +91,45 @@ def export_market_data():
     df['MS_SMA5'] = df['Market_Strength'].rolling(window=5).mean()
     df['MS_SMA20'] = df['Market_Strength'].rolling(window=20).mean()
 
-    # Determine bull/bear phases
-    df['is_bullish'] = (df['RSI'] >= 50) | (df['Trend_Breath'] >= 75)
+    # Determine bull/bear phases with persistence rule:
+    #   Bullish if Trend_Breath >= 75 OR RSI above 50 for 3 of last 4 days.
+    #   Bearish if Trend_Breath < 75 AND RSI below 50 for 3 of last 4 days.
+    #   State is sticky — once bullish, stays bullish until bearish condition triggers.
+    rsi_above_50 = (df['RSI'] >= 50).tolist()
+    tb_above_75 = (df['Trend_Breath'] >= 75).tolist()
 
-    # Track flip transitions
+    is_bullish_list = [False] * len(df)
     bull_flips = []
     bear_flips = []
-    for i in range(1, len(df)):
-        was_bullish = df['is_bullish'].iloc[i-1] if i > 0 else False
-        is_bullish = df['is_bullish'].iloc[i]
-        if not was_bullish and is_bullish:
-            bull_flips.append(i)
-        elif was_bullish and not is_bullish:
-            bear_flips.append(i)
+
+    for i in range(len(df)):
+        # Trend_Breath >= 75 always forces bullish
+        if tb_above_75[i]:
+            is_bullish_list[i] = True
+        elif i < 3:
+            # Not enough history for 3-of-4 check; use simple RSI >= 50
+            is_bullish_list[i] = rsi_above_50[i]
+        else:
+            # Count how many of the last 4 days (including today) RSI was above/below 50
+            last4_above = sum(rsi_above_50[i-3:i+1])
+            last4_below = 4 - last4_above
+            was_bullish = is_bullish_list[i-1]
+
+            if was_bullish:
+                # Stay bullish unless RSI below 50 for 3 of last 4 days
+                is_bullish_list[i] = not (last4_below >= 3)
+            else:
+                # Stay bearish unless RSI above 50 for 3 of last 4 days
+                is_bullish_list[i] = (last4_above >= 3)
+
+        # Track flip transitions
+        if i > 0:
+            if not is_bullish_list[i-1] and is_bullish_list[i]:
+                bull_flips.append(i)
+            elif is_bullish_list[i-1] and not is_bullish_list[i]:
+                bear_flips.append(i)
+
+    df['is_bullish'] = is_bullish_list
 
     # Bull flip value (only relevant when currently bearish)
     bull_flip_val = None
