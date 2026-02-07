@@ -72,6 +72,14 @@ const Dashboard = {
         return months[d.getMonth()] + ' ' + yy;
     },
 
+    formatFullDate(dateStr) {
+        const d = new Date(dateStr);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dd = String(d.getDate()).padStart(2, '0');
+        return dd + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+    },
+
     commonScales(labels) {
         return {
             x: {
@@ -97,6 +105,7 @@ const Dashboard = {
     },
 
     commonPlugins() {
+        const self = this;
         return {
             legend: {
                 display: false
@@ -104,7 +113,16 @@ const Dashboard = {
             tooltip: {
                 enabled: true,
                 mode: 'index',
-                intersect: false
+                intersect: false,
+                callbacks: {
+                    title(tooltipItems) {
+                        if (tooltipItems.length > 0 && self._rawDates) {
+                            const idx = tooltipItems[0].dataIndex;
+                            return self.formatFullDate(self._rawDates[idx]);
+                        }
+                        return '';
+                    }
+                }
             }
         };
     },
@@ -125,6 +143,8 @@ const Dashboard = {
 
         const sd = this.getSlicedData();
         const labels = sd.dates.map(d => this.formatDate(d));
+        // Store raw dates for full-date tooltips
+        this._rawDates = sd.dates;
 
         this.updateTitle(sd);
         this.charts.push(this.renderTrendBreath(labels, sd));
@@ -199,12 +219,19 @@ const Dashboard = {
         if (!ctx) return null;
 
         // Build null-padded arrays for bull/bear flip markers
-        // (scatter datasets don't position correctly on category x-axes)
+        // Offset triangles so they don't overlap the line:
+        //   green (bull) triangles appear BELOW the line
+        //   red (bear) triangles appear ABOVE the line
         const n = labels.length;
+        const yValues = sd.trend_breath;
+        const yMin = Math.min(...yValues.filter(v => v != null));
+        const yMax = Math.max(...yValues.filter(v => v != null));
+        const offset = (yMax - yMin) * 0.06; // 6% of range
+
         const bullData = new Array(n).fill(null);
         const bearData = new Array(n).fill(null);
-        sd.bull_flips.forEach(i => { if (i >= 0 && i < n) bullData[i] = sd.trend_breath[i]; });
-        sd.bear_flips.forEach(i => { if (i >= 0 && i < n) bearData[i] = sd.trend_breath[i]; });
+        sd.bull_flips.forEach(i => { if (i >= 0 && i < n) bullData[i] = sd.trend_breath[i] - offset; });
+        sd.bear_flips.forEach(i => { if (i >= 0 && i < n) bearData[i] = sd.trend_breath[i] + offset; });
 
         const bullishAnnotations = this.buildBullishAnnotations(sd);
 
