@@ -160,17 +160,12 @@ const Dashboard = {
     updateTitle(sd) {
         const cv = this.data.current_values;
 
-        // Trend Breath title
+        // Trend Breath title with RSI50 value in blue
         const titleTB = document.getElementById('chart-title-tb');
         if (titleTB) {
-            const tb = cv.trend_breath;
-            let subtitle = '';
-            if (cv.is_bullish) {
-                subtitle = '(RSI: ' + cv.rsi + ')';
-            } else {
-                subtitle = '(Bull Flip > ' + cv.bull_flip_value + ')';
-            }
-            titleTB.textContent = 'Trend Breath: ' + tb + ' ' + subtitle;
+            titleTB.innerHTML = 'Trend Breath: ' + cv.trend_breath +
+                ' (RSI: ' + cv.rsi + ') <span style="color:#1a73e8;font-weight:600">RSI50 = ' +
+                cv.rsi50_value + '</span>';
         }
 
         // Market Strength (5 SMA) title

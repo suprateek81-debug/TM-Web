@@ -58,16 +58,18 @@ def calculate_rsi_components(series, period=7):
     return rsi, avg_gain, avg_loss
 
 
-def calculate_bull_flip_value(series, rsi_period=7):
-    """Calculate the Trend_Breath value needed for RSI to cross above 50."""
+def calculate_rsi50_value(series, rsi_period=7):
+    """Calculate the next-day Trend_Breath value where RSI would equal 50."""
     if len(series) < rsi_period + 1:
         return None
     _, avg_gain, avg_loss = calculate_rsi_components(series, rsi_period)
     current_value = series.iloc[-1]
     last_ag = avg_gain.iloc[-1]
     last_al = avg_loss.iloc[-1]
-    needed_gain = (last_al - last_ag) * (rsi_period - 1)
-    target_price = current_value + max(0, needed_gain)
+    # For RSI=50: new_avg_gain = new_avg_loss
+    # change = (avg_loss - avg_gain) * (period - 1)
+    change_needed = (last_al - last_ag) * (rsi_period - 1)
+    target_price = current_value + change_needed
     return round(target_price, 2)
 
 
@@ -131,10 +133,8 @@ def export_market_data():
 
     df['is_bullish'] = is_bullish_list
 
-    # Bull flip value (only relevant when currently bearish)
-    bull_flip_val = None
-    if len(df) > 0 and not df['is_bullish'].iloc[-1]:
-        bull_flip_val = calculate_bull_flip_value(df['Trend_Breath'])
+    # RSI50 value: TB level where next-day RSI would equal 50
+    rsi50_val = calculate_rsi50_value(df['Trend_Breath']) if len(df) > 0 else None
 
     # Build output
     dates = df['Date'].dt.strftime('%Y-%m-%d').tolist()
@@ -160,7 +160,7 @@ def export_market_data():
             'ms_sma20': round(df['MS_SMA20'].iloc[-1], 2) if len(df) > 0 and pd.notna(df['MS_SMA20'].iloc[-1]) else None,
             'nnhl': round(df['NNHL'].iloc[-1], 2) if len(df) > 0 else None,
             'is_bullish': bool(df['is_bullish'].iloc[-1]) if len(df) > 0 else False,
-            'bull_flip_value': bull_flip_val,
+            'rsi50_value': rsi50_val,
         }
     }
 
