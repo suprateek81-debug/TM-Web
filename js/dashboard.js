@@ -164,7 +164,7 @@ const Dashboard = {
         const titleTB = document.getElementById('chart-title-tb');
         if (titleTB) {
             titleTB.innerHTML = 'Trend Breath: ' + cv.trend_breath +
-                ' <span style="color:#1a73e8;font-weight:600">RSI50 = ' +
+                ' <span style="margin-left:24px;color:#1a73e8;font-weight:600">RSI50 = ' +
                 cv.rsi50_value + '</span>';
         }
 
