@@ -520,6 +520,157 @@ body {
     margin-bottom: 6px;
 }
 
+/* ── Notes Textarea & Edit Controls ── */
+.notes-textarea {
+    width: 100%;
+    min-height: 200px;
+    max-height: 50vh;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+.notes-textarea:focus {
+    border-color: var(--accent-blue);
+}
+.notes-textarea[readonly] {
+    background: var(--bg-secondary);
+    cursor: default;
+}
+.notes-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+}
+.notes-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.notes-save-btn {
+    background: var(--accent-blue);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.notes-save-btn:hover { background: #1557b0; }
+.notes-save-btn:disabled {
+    background: var(--text-disabled);
+    cursor: not-allowed;
+}
+.notes-status {
+    font-size: 12px;
+    transition: opacity 0.3s;
+}
+.notes-status.success { color: var(--accent-green); }
+.notes-status.error { color: var(--accent-red); }
+.notes-status.saving { color: var(--text-secondary); }
+.notes-configure-link {
+    font-size: 12px;
+    color: var(--accent-blue);
+    cursor: pointer;
+}
+.notes-configure-link:hover { text-decoration: underline; }
+
+/* ── Settings Button & Dropdown ── */
+.settings-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    font-size: 18px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+.settings-btn:hover { color: var(--text-primary); }
+.settings-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    padding: 16px;
+    width: 320px;
+    z-index: 3000;
+}
+.settings-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+.settings-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: var(--font-body);
+    outline: none;
+    margin-bottom: 8px;
+}
+.settings-input:focus { border-color: var(--accent-blue); }
+.settings-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.settings-clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+.settings-clear-btn:hover { background: var(--bg-hover); }
+.settings-clear-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.settings-status {
+    font-size: 12px;
+    min-height: 16px;
+    margin-bottom: 4px;
+}
+.settings-status.success { color: var(--accent-green); }
+.settings-status.error { color: var(--accent-red); }
+.settings-help {
+    font-size: 11px;
+    color: var(--text-disabled);
+    line-height: 1.5;
+}
+.token-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.token-indicator.active { background: var(--accent-green); }
+.token-indicator.inactive { background: var(--text-disabled); }
+
 /* ── Responsive ── */
 @media (max-width: 1400px) {
     .card-grid.cols-5 { grid-template-columns: repeat(4, 1fr); }

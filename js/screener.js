@@ -347,17 +347,19 @@ const Screener = {
         if (existing) existing.remove();
 
         const noteInfo = this.notesData ? this.notesData[ticker] : null;
+        let originalText = (noteInfo && noteInfo.notes) ? noteInfo.notes : '';
+        const hasToken = GitHubAPI.hasToken();
 
+        // ── Overlay ──
         const overlay = document.createElement('div');
         overlay.id = 'notes-modal-overlay';
         overlay.className = 'notes-modal-overlay';
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) overlay.remove();
-        });
 
+        // ── Modal ──
         const modal = document.createElement('div');
         modal.className = 'notes-modal';
 
+        // ── Header ──
         const header = document.createElement('div');
         header.className = 'notes-modal-header';
         header.innerHTML = `
@@ -365,32 +367,124 @@ const Screener = {
             <span class="notes-modal-subtitle">Stock Notes</span>
             <button class="notes-modal-close">&times;</button>
         `;
-        header.querySelector('.notes-modal-close').addEventListener('click', () => overlay.remove());
 
+        // ── Body ──
         const body = document.createElement('div');
         body.className = 'notes-modal-body';
 
-        if (noteInfo && noteInfo.notes) {
-            body.innerHTML = `<div class="notes-content">${escapeHtml(noteInfo.notes).replace(/\n/g, '<br>')}</div>`;
-            if (noteInfo.last_updated) {
-                body.innerHTML += `<div class="notes-meta">Last updated: ${escapeHtml(noteInfo.last_updated)}</div>`;
-            }
+        // Textarea (editable if token, readonly otherwise)
+        const textarea = document.createElement('textarea');
+        textarea.className = 'notes-textarea';
+        textarea.value = originalText;
+        textarea.readOnly = !hasToken;
+        textarea.placeholder = hasToken
+            ? 'Add notes for this stock...'
+            : 'No notes for this stock.';
+
+        body.appendChild(textarea);
+
+        // ── Footer ──
+        const footer = document.createElement('div');
+        footer.className = 'notes-modal-footer';
+
+        // Left: meta
+        const meta = document.createElement('div');
+        meta.className = 'notes-meta';
+        if (noteInfo && noteInfo.last_updated) {
+            meta.textContent = 'Last updated: ' + noteInfo.last_updated;
+        }
+        footer.appendChild(meta);
+
+        // Right: actions
+        const actions = document.createElement('div');
+        actions.className = 'notes-actions';
+
+        if (hasToken) {
+            const status = document.createElement('span');
+            status.className = 'notes-status';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'notes-save-btn';
+            saveBtn.textContent = 'Save';
+
+            saveBtn.addEventListener('click', async () => {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+                status.textContent = '';
+                status.className = 'notes-status saving';
+
+                const result = await GitHubAPI.saveNote(ticker, textarea.value.trim());
+
+                if (result.success) {
+                    const now = GitHubAPI.formatTimestamp();
+                    const trimmed = textarea.value.trim();
+                    if (trimmed) {
+                        if (!this.notesData) this.notesData = {};
+                        this.notesData[ticker] = { notes: trimmed, last_updated: now };
+                    } else if (this.notesData && this.notesData[ticker]) {
+                        delete this.notesData[ticker];
+                    }
+                    meta.textContent = 'Last updated: ' + now;
+                    originalText = trimmed;
+                    status.textContent = 'Saved \u2713';
+                    status.className = 'notes-status success';
+                    setTimeout(() => { status.textContent = ''; }, 2000);
+                } else {
+                    if (result.error === 'auth') {
+                        status.textContent = 'Auth failed. Check token in Settings.';
+                    } else if (result.error === 'conflict') {
+                        status.textContent = 'Conflict. Please try again.';
+                    } else if (result.error === 'network') {
+                        status.textContent = 'Network error. Check connection.';
+                    } else {
+                        status.textContent = 'Save failed. Try again.';
+                    }
+                    status.className = 'notes-status error';
+                }
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save';
+            });
+
+            actions.appendChild(status);
+            actions.appendChild(saveBtn);
         } else {
-            body.innerHTML = '<div class="notes-empty">No notes for this stock.</div>';
+            const link = document.createElement('span');
+            link.className = 'notes-configure-link';
+            link.textContent = 'Configure GitHub token to edit';
+            link.addEventListener('click', () => {
+                GitHubAPI.toggleSettings();
+            });
+            actions.appendChild(link);
         }
 
+        footer.appendChild(actions);
+        body.appendChild(footer);
         modal.appendChild(header);
         modal.appendChild(body);
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
 
-        // Close on Escape key
+        // ── Close with dirty check ──
+        const isDirty = () => textarea.value.trim() !== originalText;
+        const closeModal = () => {
+            if (isDirty() && !confirm('Discard unsaved changes?')) return;
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+        };
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
+        header.querySelector('.notes-modal-close').addEventListener('click', closeModal);
+
         const escHandler = (e) => {
-            if (e.key === 'Escape') {
-                overlay.remove();
-                document.removeEventListener('keydown', escHandler);
-            }
+            if (e.key === 'Escape') closeModal();
         };
         document.addEventListener('keydown', escHandler);
+
+        // Focus textarea if editable
+        if (hasToken) {
+            setTimeout(() => textarea.focus(), 50);
+        }
     }
 };

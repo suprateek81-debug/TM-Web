@@ -6,6 +6,7 @@ const App = {
 
     async init() {
         tooltip.init();
+        GitHubAPI.initSettings();
         this.setupTabs();
         await this.loadMetadata();
         // Load first tab
