@@ -422,6 +422,85 @@ body {
     height: 160px;
 }
 
+/* ── Stock Notes Modal ── */
+.notes-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.notes-modal {
+    background: var(--bg-primary);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    width: 600px;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.notes-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+}
+.notes-modal-ticker {
+    font-family: var(--font-main);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.notes-modal-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.notes-modal-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+.notes-modal-close:hover { color: var(--text-primary); }
+.notes-modal-body {
+    padding: 20px 24px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+.notes-content {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+.notes-meta {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-disabled);
+}
+.notes-empty {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 20px 0;
+}
+.ticker-clickable {
+    cursor: pointer;
+    color: var(--accent-blue) !important;
+}
+.ticker-clickable:hover {
+    text-decoration: underline;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1400px) {
     .card-grid.cols-5 { grid-template-columns: repeat(4, 1fr); }

@@ -3,6 +3,7 @@
 const Screener = {
     index: null,
     currentData: null,
+    notesData: null,
     sortColumn: 'rs_rating',
     sortDesc: true,
 
@@ -34,6 +35,11 @@ const Screener = {
 
     async init() {
         this.index = await fetchJSON('data/screener_index.json');
+        try {
+            this.notesData = await fetchJSON('data/stock_notes.json');
+        } catch (e) {
+            this.notesData = {};
+        }
         this.bindSearch();
     },
 
@@ -179,7 +185,12 @@ const Screener = {
                     display = val != null ? escapeHtml(String(val)) : '-';
                 }
 
-                tbody += `<td class="${cellClass}">${display}</td>`;
+                // Make ticker clickable for stock notes
+                if (col.key === 'ticker' && val) {
+                    tbody += `<td class="${cellClass} ticker-clickable" data-ticker="${escapeHtml(String(val))}">${display}</td>`;
+                } else {
+                    tbody += `<td class="${cellClass}">${display}</td>`;
+                }
             }
             tbody += '</tr>';
         }
@@ -202,5 +213,66 @@ const Screener = {
                 this.renderTable();
             });
         });
+
+        // Bind ticker click handlers for notes modal
+        container.querySelectorAll('.ticker-clickable').forEach(td => {
+            td.addEventListener('click', () => {
+                const ticker = td.getAttribute('data-ticker');
+                if (ticker) this.showNotesModal(ticker);
+            });
+        });
+    },
+
+    showNotesModal(ticker) {
+        // Remove any existing modal
+        const existing = document.getElementById('notes-modal-overlay');
+        if (existing) existing.remove();
+
+        const noteInfo = this.notesData ? this.notesData[ticker] : null;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'notes-modal-overlay';
+        overlay.className = 'notes-modal-overlay';
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+
+        const modal = document.createElement('div');
+        modal.className = 'notes-modal';
+
+        const header = document.createElement('div');
+        header.className = 'notes-modal-header';
+        header.innerHTML = `
+            <span class="notes-modal-ticker">${escapeHtml(ticker)}</span>
+            <span class="notes-modal-subtitle">Stock Notes</span>
+            <button class="notes-modal-close">&times;</button>
+        `;
+        header.querySelector('.notes-modal-close').addEventListener('click', () => overlay.remove());
+
+        const body = document.createElement('div');
+        body.className = 'notes-modal-body';
+
+        if (noteInfo && noteInfo.notes) {
+            body.innerHTML = `<div class="notes-content">${escapeHtml(noteInfo.notes).replace(/\n/g, '<br>')}</div>`;
+            if (noteInfo.last_updated) {
+                body.innerHTML += `<div class="notes-meta">Last updated: ${escapeHtml(noteInfo.last_updated)}</div>`;
+            }
+        } else {
+            body.innerHTML = '<div class="notes-empty">No notes for this stock.</div>';
+        }
+
+        modal.appendChild(header);
+        modal.appendChild(body);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Close on Escape key
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                overlay.remove();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
     }
 };
