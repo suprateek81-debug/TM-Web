@@ -198,16 +198,13 @@ const Dashboard = {
         const ctx = document.getElementById('chart-trend-breath');
         if (!ctx) return null;
 
-        // Build scatter data for bull and bear flips using numeric indices
-        // (using label strings would clump points at first occurrence of that month)
-        const bullScatter = sd.bull_flips.map(i => ({
-            x: i,
-            y: sd.trend_breath[i]
-        }));
-        const bearScatter = sd.bear_flips.map(i => ({
-            x: i,
-            y: sd.trend_breath[i]
-        }));
+        // Build null-padded arrays for bull/bear flip markers
+        // (scatter datasets don't position correctly on category x-axes)
+        const n = labels.length;
+        const bullData = new Array(n).fill(null);
+        const bearData = new Array(n).fill(null);
+        sd.bull_flips.forEach(i => { if (i >= 0 && i < n) bullData[i] = sd.trend_breath[i]; });
+        sd.bear_flips.forEach(i => { if (i >= 0 && i < n) bearData[i] = sd.trend_breath[i]; });
 
         const bullishAnnotations = this.buildBullishAnnotations(sd);
 
@@ -217,7 +214,6 @@ const Dashboard = {
                 labels: labels,
                 datasets: [
                     {
-                        type: 'line',
                         data: sd.trend_breath,
                         borderColor: '#1a73e8',
                         borderWidth: 2,
@@ -228,22 +224,26 @@ const Dashboard = {
                         order: 2
                     },
                     {
-                        type: 'scatter',
-                        data: bullScatter,
+                        data: bullData,
+                        borderColor: 'transparent',
                         backgroundColor: '#1e8e3e',
                         pointStyle: 'triangle',
-                        pointRadius: 7,
-                        pointHoverRadius: 9,
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        showLine: false,
+                        spanGaps: false,
                         order: 1
                     },
                     {
-                        type: 'scatter',
-                        data: bearScatter,
+                        data: bearData,
+                        borderColor: 'transparent',
                         backgroundColor: '#d93025',
                         pointStyle: 'triangle',
-                        pointRadius: 7,
-                        pointHoverRadius: 9,
-                        rotation: 180,
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        pointRotation: 180,
+                        showLine: false,
+                        spanGaps: false,
                         order: 1
                     }
                 ]
