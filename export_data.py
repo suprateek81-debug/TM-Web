@@ -419,8 +419,15 @@ def calc_yoy(current, yoy, field):
         return None
     cur_val = current.get(field)
     yoy_val = yoy.get(field)
-    if cur_val is None or yoy_val is None or yoy_val == 0:
+    if cur_val is None or yoy_val is None:
         return None
+    if yoy_val == 0:
+        if cur_val > 0:
+            return 999.9   # Turnaround from zero to positive
+        elif cur_val < 0:
+            return -999.9   # Zero to loss
+        else:
+            return 0.0
     return round(((cur_val - yoy_val) / abs(yoy_val)) * 100, 1)
 
 
