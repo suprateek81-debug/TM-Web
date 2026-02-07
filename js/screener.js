@@ -10,7 +10,7 @@ const Screener = {
     COLUMNS: [
         { key: 'ticker', label: 'Stock', cls: 'td-ticker' },
         { key: 'rs_rating', label: 'RS', cls: 'td-rs', fmt: v => v != null ? v : '-' },
-        { key: 'industry_rank', label: 'Rank', fmt: v => v != null ? v : '-' },
+        { key: 'industry_rank', label: 'IRank', fmt: v => v != null ? v : '-' },
         { key: 'volume', label: 'Vol (Cr)', fmt: v => v != null ? formatNumber(v) : '-' },
         { key: 'atr_pct', label: 'ATR %', fmt: v => v != null ? v.toFixed(1) : '-' },
         'SEP',
@@ -188,6 +188,10 @@ const Screener = {
                 // Make ticker clickable for stock notes
                 if (col.key === 'ticker' && val) {
                     tbody += `<td class="${cellClass} ticker-clickable" data-ticker="${escapeHtml(String(val))}">${display}</td>`;
+                } else if (col.key === 'rs_rating' && val != null) {
+                    tbody += `<td class="${cellClass} rs-hoverable" data-ticker="${escapeHtml(String(stock.ticker))}">${display}</td>`;
+                } else if (col.key === 'industry_rank' && val != null) {
+                    tbody += `<td class="${cellClass} irank-hoverable">${display}</td>`;
                 } else {
                     tbody += `<td class="${cellClass}">${display}</td>`;
                 }
@@ -221,6 +225,120 @@ const Screener = {
                 if (ticker) this.showNotesModal(ticker);
             });
         });
+
+        // Bind RS hover tooltips
+        container.querySelectorAll('.rs-hoverable').forEach(td => {
+            td.addEventListener('mouseenter', (e) => this.showRSChartTooltip(e, td.getAttribute('data-ticker')));
+            td.addEventListener('mouseleave', () => this.hideChartTooltip());
+        });
+
+        // Bind IRank hover tooltips
+        container.querySelectorAll('.irank-hoverable').forEach(td => {
+            td.addEventListener('mouseenter', (e) => this.showIRankChartTooltip(e));
+            td.addEventListener('mouseleave', () => this.hideChartTooltip());
+        });
+    },
+
+    showRSChartTooltip(event, ticker) {
+        if (!this.currentData) return;
+        const stock = this.currentData.stocks.find(s => s.ticker === ticker);
+        if (!stock || !stock.rs_history || stock.rs_history.dates.length < 2) return;
+
+        const html = `<div class="screener-chart-tooltip-title">RS Trend: ${escapeHtml(ticker)}</div>` +
+            `<div class="screener-chart-tooltip-subtitle">Current RS: ${stock.rs_rating}</div>` +
+            `<canvas id="tooltip-rs-chart" width="320" height="160"></canvas>`;
+        const rect = event.target.getBoundingClientRect();
+        tooltip.show(rect.left + rect.width / 2, rect.top, html);
+
+        const canvas = document.getElementById('tooltip-rs-chart');
+        if (!canvas) return;
+        if (tooltip.chartInstance) { tooltip.chartInstance.destroy(); tooltip.chartInstance = null; }
+
+        tooltip.chartInstance = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: stock.rs_history.dates,
+                datasets: [{
+                    data: stock.rs_history.values,
+                    borderColor: '#4a90d9',
+                    backgroundColor: 'rgba(74, 144, 217, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'RS', font: { size: 10 } },
+                        ticks: { font: { size: 9 } },
+                        grid: { color: 'rgba(200,200,200,0.3)' }
+                    },
+                    x: {
+                        ticks: { maxTicksLimit: 5, font: { size: 9 }, maxRotation: 0 },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    },
+
+    showIRankChartTooltip(event) {
+        if (!this.currentData || !this.currentData.rank_history) return;
+        const rh = this.currentData.rank_history;
+        if (!rh.dates || rh.dates.length < 2) return;
+
+        const industry = this.currentData.industry;
+        const currentRank = this.currentData.rank;
+
+        const html = `<div class="screener-chart-tooltip-title">Rank Trend: ${escapeHtml(industry)}</div>` +
+            `<div class="screener-chart-tooltip-subtitle">Current Rank: ${currentRank}</div>` +
+            `<canvas id="tooltip-irank-chart" width="320" height="160"></canvas>`;
+        const rect = event.target.getBoundingClientRect();
+        tooltip.show(rect.left + rect.width / 2, rect.top, html);
+
+        const canvas = document.getElementById('tooltip-irank-chart');
+        if (!canvas) return;
+        if (tooltip.chartInstance) { tooltip.chartInstance.destroy(); tooltip.chartInstance = null; }
+
+        tooltip.chartInstance = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: rh.dates,
+                datasets: [{
+                    data: rh.values,
+                    borderColor: '#4a90d9',
+                    backgroundColor: 'rgba(74, 144, 217, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: {
+                    y: {
+                        reverse: true,
+                        title: { display: true, text: 'Rank', font: { size: 10 } },
+                        ticks: { font: { size: 9 } },
+                        grid: { color: 'rgba(200,200,200,0.3)' }
+                    },
+                    x: {
+                        ticks: { maxTicksLimit: 5, font: { size: 9 }, maxRotation: 0 },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    },
+
+    hideChartTooltip() {
+        tooltip.hide();
     },
 
     showNotesModal(ticker) {

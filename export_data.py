@@ -516,6 +516,37 @@ def export_screener_data(conn):
         'tickers': ticker_to_industry,
     })
 
+    # Pre-fetch RS history (last 90 days) for all stocks in one pass
+    rs_history_map = {}
+    cursor.execute('''
+        SELECT ticker, date, rs_rating FROM stock_metrics
+        WHERE date IN (
+            SELECT DISTINCT date FROM stock_metrics ORDER BY date DESC LIMIT 90
+        )
+        ORDER BY ticker, date ASC
+    ''')
+    for ticker, date, rs in cursor.fetchall():
+        if ticker not in rs_history_map:
+            rs_history_map[ticker] = {'dates': [], 'values': []}
+        if rs is not None:
+            rs_history_map[ticker]['dates'].append(date)
+            rs_history_map[ticker]['values'].append(rs)
+
+    # Pre-fetch industry rank history (last 90 days) for all industries
+    irank_history_map = {}
+    cursor.execute('''
+        SELECT industry, date, rank FROM industry_rankings
+        WHERE date IN (
+            SELECT DISTINCT date FROM industry_rankings ORDER BY date DESC LIMIT 90
+        )
+        ORDER BY industry, date ASC
+    ''')
+    for ind, date, rank in cursor.fetchall():
+        if ind not in irank_history_map:
+            irank_history_map[ind] = {'dates': [], 'values': []}
+        irank_history_map[ind]['dates'].append(date)
+        irank_history_map[ind]['values'].append(rank)
+
     # Export per-industry files
     today = datetime.now()
     exported = 0
@@ -555,6 +586,10 @@ def export_screener_data(conn):
                 row['atr_pct'] = None
 
             row['industry_rank'] = ind_ranks.get(industry, 0)
+
+            # RS history for tooltip chart
+            if ticker in rs_history_map:
+                row['rs_history'] = rs_history_map[ticker]
 
             # Screener metrics
             cursor.execute('''
@@ -621,11 +656,15 @@ def export_screener_data(conn):
         stocks.sort(key=lambda x: x.get('rs_rating') or 0, reverse=True)
 
         slug = slugify(industry)
-        write_json(os.path.join(SCREENER_DIR, f'{slug}.json'), {
+        industry_file = {
             'industry': industry,
             'rank': ind_ranks.get(industry, 0),
             'stocks': stocks,
-        })
+        }
+        # Include industry rank history for tooltip chart
+        if industry in irank_history_map:
+            industry_file['rank_history'] = irank_history_map[industry]
+        write_json(os.path.join(SCREENER_DIR, f'{slug}.json'), industry_file)
         exported += 1
 
     print(f"  Exported {exported} industry screener files")
@@ -667,6 +706,35 @@ def export_metadata(conn):
 
 
 # ============================================================================
+# Stock Notes Export
+# ============================================================================
+
+def export_notes(conn):
+    """Export stock notes to a single JSON file."""
+    print("Exporting stock notes...")
+    cursor = conn.cursor()
+
+    # Check if stock_notes table exists
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='stock_notes'")
+    if not cursor.fetchone():
+        print("  stock_notes table not found, skipping")
+        return
+
+    cursor.execute('SELECT ticker, notes, last_updated FROM stock_notes WHERE notes IS NOT NULL AND notes != ""')
+    rows = cursor.fetchall()
+
+    notes_data = {}
+    for ticker, notes, last_updated in rows:
+        notes_data[ticker] = {
+            'notes': notes,
+            'last_updated': last_updated
+        }
+
+    write_json(os.path.join(OUTPUT_DIR, 'stock_notes.json'), notes_data)
+    print(f"  Exported notes for {len(notes_data)} stocks")
+
+
+# ============================================================================
 # Main
 # ============================================================================
 
@@ -690,6 +758,7 @@ def main():
     export_top_stocks(conn)
     export_momentum_stocks(conn)
     export_screener_data(conn)
+    export_notes(conn)
 
     conn.close()
     print()

@@ -500,6 +500,25 @@ body {
 .ticker-clickable:hover {
     text-decoration: underline;
 }
+.rs-hoverable, .irank-hoverable {
+    cursor: default;
+}
+.rs-hoverable:hover, .irank-hoverable:hover {
+    background: var(--bg-hover);
+}
+.screener-chart-tooltip-title {
+    font-family: var(--font-main);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+.screener-chart-tooltip-subtitle {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
 
 /* ── Responsive ── */
 @media (max-width: 1400px) {
