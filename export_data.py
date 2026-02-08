@@ -346,7 +346,7 @@ def export_top_stocks(conn):
 
 
 def export_momentum_stocks(conn):
-    """Export top 25 stocks by RS momentum."""
+    """Export top 50 stocks by RS momentum."""
     print("Exporting stocks_momentum.json...")
     cursor = conn.cursor()
 
@@ -397,7 +397,7 @@ def export_momentum_stocks(conn):
         })
 
     filtered.sort(key=lambda x: x['rs_change'] if x['rs_change'] is not None else -999, reverse=True)
-    stocks = filtered[:25]
+    stocks = filtered[:50]
     for i, s in enumerate(stocks):
         s['rank'] = i + 1
 

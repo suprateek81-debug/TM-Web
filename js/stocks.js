@@ -43,7 +43,7 @@ const Stocks = {
         if (this.currentView === 'top100') {
             el.textContent = 'Top 100 Stocks by ATR-Adjusted Return | Filters: Vol > 10 Cr, ATR > 2.5%';
         } else {
-            el.textContent = 'Top 25 Stocks Gaining RS Momentum | Filters: Vol > 10 Cr, ATR > 2.5%';
+            el.textContent = 'Top 50 Stocks Gaining RS Momentum | Filters: Vol > 10 Cr, ATR > 2.5%';
         }
     },
 
